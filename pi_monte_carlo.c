@@ -55,20 +55,25 @@ int main(int argc, char* argv[]) {
  */
 
 long long int Count_hits(long long int number_of_tosses, int thread_count) {
-   int n, i; 
+   int i; 
    unsigned seed = 1, xx;
    double y, x;
    long long int hits = 0;
-
-   xx = my_rand(&seed);
-   for (i = 0; i < number_of_tosses; i++) {
-      y = my_drand(&xx);
-      x = my_drand(&xx);
-      double dist = (x*x) + (y*y);
-      if(dist <= 1) {
-         hits++;
+   #pragma omp parallel num_threads(thread_count) shared(seed, xx) private(i) reduction(+: hits)
+    {
+      xx = my_rand(&seed);
+      #pragma omp for
+      for (i = 0; i < number_of_tosses; i++) {
+         y = my_drand(&xx);
+         x = my_drand(&xx);
+         double dist = (x*x) + (y*y);
+         if(dist <= 1) {
+            hits++;
+         }
       }
    }
+
+   
    return hits;
   
 }  /* Count_hits */
